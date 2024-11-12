@@ -62,4 +62,4 @@ jobs:
             docker rm connectin-server || true
             docker image rm ${{ steps.login-ecr.outputs.registry }}/connectin-server:latest || true
             docker pull ${{ steps.login-ecr.outputs.registry }}/connectin-server:latest
-            docker run -d --name locavel-server -p 8080:8080 ${{ steps.login-ecr.outputs.registry }}/connectin-server:latest
+            docker run -d --name connectin-server -p 8080:8080 ${{ steps.login-ecr.outputs.registry }}/connectin-server:latest
