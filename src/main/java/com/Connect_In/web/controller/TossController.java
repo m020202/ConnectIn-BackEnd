@@ -1,5 +1,6 @@
 package com.Connect_In.web.controller;
 
+import com.Connect_In.web.apiPayload.ApiResponse;
 import com.Connect_In.web.dto.ConfirmPaymentRequest;
 import com.Connect_In.web.dto.ConfirmPaymentResponse;
 import com.Connect_In.web.dto.PaymentErrorResponse;
@@ -43,13 +44,13 @@ public class TossController {
     }
 
     @PostMapping("/confirm")
-    public ConfirmPaymentResponse confirmPayment(@RequestBody ConfirmPaymentRequest confirmPaymentRequest) throws Exception {
+    public ApiResponse<ConfirmPaymentResponse> confirmPayment(@RequestBody ConfirmPaymentRequest confirmPaymentRequest) throws Exception {
 
         // requestConfirm(): toss payments에 결제 승인 요청
-        HttpResponse response = requestConfirm(confirmPaymentRequest); // 토스에게 결제 승인 요청
+        //HttpResponse response = requestConfirm(confirmPaymentRequest); // 토스에게 결제 승인 요청
 
-
-        return ConfirmPaymentResponse.builder().orderId(confirmPaymentRequest.getOrderId()).message("정상 처리 되었습니다").build();
+        ConfirmPaymentResponse result = ConfirmPaymentResponse.builder().orderId(confirmPaymentRequest.getOrderId()).amount(confirmPaymentRequest.getAmount()).build();
+        return ApiResponse.onSuccess(result);
     }
 
     public HttpResponse requestConfirm(ConfirmPaymentRequest confirmPaymentRequest) throws IOException, InterruptedException {
