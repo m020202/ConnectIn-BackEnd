@@ -1,6 +1,7 @@
 package com.Connect_In.web.controller;
 
 import com.Connect_In.web.dto.ConfirmPaymentRequest;
+import com.Connect_In.web.dto.ConfirmPaymentResponse;
 import com.Connect_In.web.dto.PaymentErrorResponse;
 import com.Connect_In.web.dto.SaveAmountRequest;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -42,13 +43,13 @@ public class TossController {
     }
 
     @PostMapping("/confirm")
-    public String confirmPayment(@RequestBody ConfirmPaymentRequest confirmPaymentRequest) throws Exception {
+    public ConfirmPaymentResponse confirmPayment(@RequestBody ConfirmPaymentRequest confirmPaymentRequest) throws Exception {
 
         // requestConfirm(): toss payments에 결제 승인 요청
-//        HttpResponse response = requestConfirm(confirmPaymentRequest); // 토스에게 결제 승인 요청
+        HttpResponse response = requestConfirm(confirmPaymentRequest); // 토스에게 결제 승인 요청
 
-        //
-        return "완료되었습니다!";
+
+        return ConfirmPaymentResponse.builder().orderId(confirmPaymentRequest.getOrderId()).message("정상 처리 되었습니다").build();
     }
 
     public HttpResponse requestConfirm(ConfirmPaymentRequest confirmPaymentRequest) throws IOException, InterruptedException {
@@ -74,7 +75,4 @@ public class TossController {
 
         return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
     }
-
-
-
 }
