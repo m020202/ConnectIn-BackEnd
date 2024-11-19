@@ -22,6 +22,7 @@ import java.net.http.HttpResponse;
 public class TossController {
     private final String API_URL = "https://api.tosspayments.com/v1/payments/confirm";
     private final String SECRET_KEY = "test_sk_DnyRpQWGrNanRMA2mRjgVKwv1M9E";
+    private final ObjectMapper objectMapper = new ObjectMapper();
     @PostMapping("/saveAmount")
     public ResponseEntity<?> tempSave(HttpSession session, @RequestBody SaveAmountRequest saveAmountRequest) {
         session.setAttribute(saveAmountRequest.getOrderId(), saveAmountRequest.getAmount());
@@ -43,21 +44,23 @@ public class TossController {
     }
 
     @PostMapping("/confirm")
-    public ApiResponse<ConfirmPaymentResponse> confirmPayment(@RequestBody ConfirmPaymentRequest confirmPaymentRequest) throws Exception {
+    public ApiResponse<ConfirmPaymentDTO.ConfirmPaymentResponseDTO> confirmPayment(@RequestBody ConfirmPaymentDTO.ConfirmPaymentRequestDTO confirmPaymentRequest) throws Exception {
 
         // requestConfirm(): toss payments에 결제 승인 요청
-//        HttpResponse response = requestConfirm(confirmPaymentRequest); // 토스에게 결제 승인 요청
+        HttpResponse<String> response = requestConfirm(confirmPaymentRequest); // 토스에게 결제 승인 요청
 
-        ConfirmPaymentResponse result = ConfirmPaymentResponse.builder().orderId(confirmPaymentRequest.getOrderId()).amount(confirmPaymentRequest.getAmount()).build();
-        return ApiResponse.onSuccess(result);
+        if (response.statusCode() == 200) {
+            return ApiResponse.onSuccess(objectMapper.readValue(response.body(), ConfirmPaymentDTO.ConfirmPaymentResponseDTO.class));
+        } else {
+            throw new Exception("결제 승인 실패: " + response.body());
+        }
     }
 
-    public Payment requestConfirm(ConfirmPaymentRequest confirmPaymentRequest) throws Exception {
+    public HttpResponse<String> requestConfirm(ConfirmPaymentDTO.ConfirmPaymentRequestDTO confirmPaymentRequest) throws Exception {
         String tossOrderId = confirmPaymentRequest.getOrderId();
         String amount = confirmPaymentRequest.getAmount();
         String paymentKey = confirmPaymentRequest.getPaymentKey();
 
-        ObjectMapper objectMapper = new ObjectMapper();
         // 승인 요청에 사용할 JSON 객체를 만듭니다.
         JsonNode requestObj = objectMapper.createObjectNode()
                 .put("orderId", tossOrderId)
@@ -74,19 +77,16 @@ public class TossController {
                 .header("Content-Type", "application/json")
                 .method("POST", HttpRequest.BodyPublishers.ofString(requestBody))
                 .build();
+
         HttpClient client = HttpClient.newHttpClient();
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        if (response.statusCode() == 200) {
-            return objectMapper.readValue(response.body(), Payment.class);
-        } else {
-            throw new Exception("결제 승인 실패: " + response.body());
-        }
-       // HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        return response;
     }
 
     // Base64 인코딩 유틸리티
     private String encodeBase64(String value) {
         return java.util.Base64.getEncoder().encodeToString(value.getBytes());
     }
+
 }
