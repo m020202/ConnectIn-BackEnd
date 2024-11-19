@@ -5,11 +5,12 @@ import lombok.Builder;
 import lombok.Getter;
 
 @Builder
-@AllArgsConstructor
 @Getter
-public class ConfirmPaymentRequest {
-    private String orderId;
-    private String amount;
+@AllArgsConstructor
+public class Payment {
     private String paymentKey;
-
+    private String status;
+    private String orderId;
+    private String method;
+    private String amount;
 }

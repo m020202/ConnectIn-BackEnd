@@ -1,10 +1,7 @@
 package com.Connect_In.web.controller;
 
 import com.Connect_In.web.apiPayload.ApiResponse;
-import com.Connect_In.web.dto.ConfirmPaymentRequest;
-import com.Connect_In.web.dto.ConfirmPaymentResponse;
-import com.Connect_In.web.dto.PaymentErrorResponse;
-import com.Connect_In.web.dto.SaveAmountRequest;
+import com.Connect_In.web.dto.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpSession;
@@ -23,6 +20,8 @@ import java.net.http.HttpResponse;
 @RestController
 @RequestMapping("/payments/")
 public class TossController {
+    private final String API_URL = "https://api.tosspayments.com/v1/payments/confirm";
+    private final String SECRET_KEY = "test_sk_DnyRpQWGrNanRMA2mRjgVKwv1M9E";
     @PostMapping("/saveAmount")
     public ResponseEntity<?> tempSave(HttpSession session, @RequestBody SaveAmountRequest saveAmountRequest) {
         session.setAttribute(saveAmountRequest.getOrderId(), saveAmountRequest.getAmount());
@@ -47,33 +46,47 @@ public class TossController {
     public ApiResponse<ConfirmPaymentResponse> confirmPayment(@RequestBody ConfirmPaymentRequest confirmPaymentRequest) throws Exception {
 
         // requestConfirm(): toss payments에 결제 승인 요청
-        //HttpResponse response = requestConfirm(confirmPaymentRequest); // 토스에게 결제 승인 요청
+//        HttpResponse response = requestConfirm(confirmPaymentRequest); // 토스에게 결제 승인 요청
 
         ConfirmPaymentResponse result = ConfirmPaymentResponse.builder().orderId(confirmPaymentRequest.getOrderId()).amount(confirmPaymentRequest.getAmount()).build();
         return ApiResponse.onSuccess(result);
     }
 
-    public HttpResponse requestConfirm(ConfirmPaymentRequest confirmPaymentRequest) throws IOException, InterruptedException {
+    public Payment requestConfirm(ConfirmPaymentRequest confirmPaymentRequest) throws Exception {
         String tossOrderId = confirmPaymentRequest.getOrderId();
         String amount = confirmPaymentRequest.getAmount();
+        String paymentKey = confirmPaymentRequest.getPaymentKey();
 
         ObjectMapper objectMapper = new ObjectMapper();
         // 승인 요청에 사용할 JSON 객체를 만듭니다.
         JsonNode requestObj = objectMapper.createObjectNode()
                 .put("orderId", tossOrderId)
-                .put("amount", amount);
+                .put("amount", amount)
+                .put("paymentKey", paymentKey);
 
         // ObjectMapper를 사용하여 JSON 객체를 문자열로 변환
         String requestBody = objectMapper.writeValueAsString(requestObj);
 
         // 결제 승인 API를 호출
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("<https://api.tosspayments.com/v1/payments/confirm>"))
-                .header("Authorization", "test_sk_DnyRpQWGrNanRMA2mRjgVKwv1M9E")
+                .uri(URI.create(API_URL))
+                .header("Authorization", "Basic " + encodeBase64(SECRET_KEY))
                 .header("Content-Type", "application/json")
                 .method("POST", HttpRequest.BodyPublishers.ofString(requestBody))
                 .build();
+        HttpClient client = HttpClient.newHttpClient();
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() == 200) {
+            return objectMapper.readValue(response.body(), Payment.class);
+        } else {
+            throw new Exception("결제 승인 실패: " + response.body());
+        }
+       // HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+    }
+
+    // Base64 인코딩 유틸리티
+    private String encodeBase64(String value) {
+        return java.util.Base64.getEncoder().encodeToString(value.getBytes());
     }
 }
