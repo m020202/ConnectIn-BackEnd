@@ -1,5 +1,6 @@
 package com.Connect_In.web.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,6 +22,7 @@ public class ConfirmPaymentDTO {
     @Getter
     @AllArgsConstructor
     @NoArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class ConfirmPaymentResponseDTO {
         private String status;
         private String orderName;
