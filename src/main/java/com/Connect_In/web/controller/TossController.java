@@ -58,7 +58,7 @@ public class TossController {
 
     public HttpResponse<String> requestConfirm(ConfirmPaymentDTO.ConfirmPaymentRequestDTO confirmPaymentRequest) throws Exception {
         String tossOrderId = confirmPaymentRequest.getOrderId();
-        String amount = confirmPaymentRequest.getAmount();
+        Integer amount = confirmPaymentRequest.getAmount();
         String paymentKey = confirmPaymentRequest.getPaymentKey();
 
         // 승인 요청에 사용할 JSON 객체를 만듭니다.
@@ -73,7 +73,7 @@ public class TossController {
         // 결제 승인 API를 호출
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(API_URL))
-                .header("Authorization", "Basic " + encodeBase64(SECRET_KEY))
+                .header("Authorization", "Basic " + encodeBase64(SECRET_KEY,""))
                 .header("Content-Type", "application/json")
                 .method("POST", HttpRequest.BodyPublishers.ofString(requestBody))
                 .build();
@@ -85,8 +85,8 @@ public class TossController {
     }
 
     // Base64 인코딩 유틸리티
-    private String encodeBase64(String value) {
-        return java.util.Base64.getEncoder().encodeToString(value.getBytes());
+    private String encodeBase64(String username, String password) {
+        String credentials = username + ":" + password; // ':' 포함
+        return java.util.Base64.getEncoder().encodeToString(credentials.getBytes());
     }
-
 }
