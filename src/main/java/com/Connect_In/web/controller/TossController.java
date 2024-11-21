@@ -16,6 +16,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Base64;
 
 @RestController
 @RequestMapping("/payments/")
@@ -61,19 +62,24 @@ public class TossController {
         Integer amount = confirmPaymentRequest.getAmount();
         String paymentKey = confirmPaymentRequest.getPaymentKey();
 
-        // 승인 요청에 사용할 JSON 객체를 만듭니다.
+        // 승인 요청에 사용할 JSON 객체 생성.
         JsonNode requestObj = objectMapper.createObjectNode()
                 .put("orderId", tossOrderId)
                 .put("amount", amount)
                 .put("paymentKey", paymentKey);
 
-        // ObjectMapper를 사용하여 JSON 객체를 문자열로 변환
+
+        // ObjectMapper를 사용하여 JSON 객체를 문자열로 변환.
         String requestBody = objectMapper.writeValueAsString(requestObj);
+
+        Base64.Encoder encoder = Base64.getEncoder();
+        byte[] encodedBytes = encoder.encode((SECRET_KEY + ":").getBytes("UTF-8"));
+        String authorizations = "Basic " + new String(encodedBytes, 0, encodedBytes.length);
 
         // 결제 승인 API를 호출
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(API_URL))
-                .header("Authorization", "Basic " + encodeBase64(SECRET_KEY,""))
+                .header("Authorization", authorizations)
                 .header("Content-Type", "application/json")
                 .method("POST", HttpRequest.BodyPublishers.ofString(requestBody))
                 .build();
