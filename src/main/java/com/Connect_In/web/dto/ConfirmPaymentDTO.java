@@ -10,7 +10,7 @@ public class ConfirmPaymentDTO {
     @AllArgsConstructor
     public static class ConfirmPaymentRequestDTO {
         private String orderId;
-        private String amount;
+        private Integer amount;
         private String paymentKey;
     }
 
@@ -19,10 +19,10 @@ public class ConfirmPaymentDTO {
     @Getter
     @AllArgsConstructor
     public static class ConfirmPaymentResponseDTO {
-        private String paymentKey;
         private String status;
+        private String orderName;
         private String orderId;
-        private String method;
-        private String amount;
+        private Integer totalAmount;
+        private String approvedAt;
     }
 }
